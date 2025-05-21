@@ -19,7 +19,7 @@ jobs:
         with:
           name: k6-html-report
           path: |
-            loadtest.html
+            loadTest.html
             reportScenario.html
   deploy:
     runs-on: ubuntu-latest
