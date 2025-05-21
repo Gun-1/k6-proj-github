@@ -1,0 +1,39 @@
+name: k6 Load Test
+on: [push, workflow_dispatch]
+jobs:
+  run-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup K6
+        uses: grafana/setup-k6-action@v1
+      - name: Run k6 test
+        uses: grafana/run-k6-action@v1
+        with:
+          path: |
+            loadtest.js
+            scenario.js
+      - name: Upload k6 results
+        uses: actions/upload-artifact@v4
+        with:
+          name: k6-html-report
+          path: |
+            loadtest.html
+            reportScenario.html
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [run-test]
+    steps:
+      - name: Get code
+        uses: actions/checkout@v4
+      - name: Setup SSH Agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.privatedsa }}
+      - name: Check SSH folder content
+        run: ls -la ~/.ssh
+      - name: Check NodeJS version
+        run: node -v
+      - name: rsync connection
+        run: rsync -e "ssh -o StrictHostKeyChecking=no" -arvc * ${{secrets.userdev}}@${{secrets.serverdev}}:/home/gunawan/k6-github/
